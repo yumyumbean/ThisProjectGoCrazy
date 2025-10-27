@@ -8,23 +8,24 @@
 
 // Include Particle Device OS APIs
 #include "Particle.h"
+#include "Adafruit_GFX.h"
+#include "Adafruit_SSD1306.h"
 
 // Let Device OS manage the connection to the Particle Cloud
 SYSTEM_MODE(SEMI_AUTOMATIC);
 
-// Run the application and system concurrently in separate threads
-SYSTEM_THREAD(ENABLED);
-int PIN = D13;
+Adafruit_SSD1306 display(OLED_RESET);
+
+const int disPIN = D18;
 
 void setup() {
-pinMode(PIN, OUTPUT);
+  Serial.begin(9600);
+  waitFor(Serial.isConnected,10000);
 
+ display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
 }
 
 
 void loop() {
-digitalWrite(PIN, HIGH);
-delay(500);
-digitalWrite(PIN, LOW);
-delay(500);
+    
 }
