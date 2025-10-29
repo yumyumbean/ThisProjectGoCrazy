@@ -9,6 +9,7 @@
 #include "Adafruit_GFX.h"
 #include "Adafruit_SSD1306.h"
 #include "Button.h"
+#include "IoTTimer.h"
 
 // Let Device OS manage the connection to the Particle Cloud
 SYSTEM_MODE(SEMI_AUTOMATIC);
@@ -1012,6 +1013,8 @@ Adafruit_SSD1306 display(OLED_RESET);
 
 int currentTime;
 int lastSecond;
+const int oneSecTim = 1000;
+const int fiveSecTim = 5000;
 const int LASER = D2;
 const int PHOTO = D12;
 Button onAndOff(D6);
@@ -1021,20 +1024,22 @@ const int dioPIN = D2;
 int val = 0;
 String Val ; // Strings
 const int rotdefault = 0;
+int score;
+IoTTimer timerOne;
+int onAndOffV;
 
 void setup() {
   pinMode(LASER, OUTPUT);
+  digitalWrite(LASER, LOW);
   pinMode(dioPIN, OUTPUT); //SETS D2 TO OUTPUT
   pinMode(analogPin, INPUT); //SETS D12 to INPUT
   Serial.begin(9600);
   waitFor(Serial.isConnected,10000);
   display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
   display.display(); // show OLED splashscreen
+  onAndOffV = 0;
+  score = 0;
   delay(2000);
-  display.clearDisplay();   // clear screen and buffer
-  display.drawBitmap(0, 1,  bitmap_SPLASH, 128, 64, WHITE);
-  display.display();
-
 }
 
 
@@ -1042,11 +1047,31 @@ void loop() {
   currentTime = millis();
   val = analogRead(analogPin);
   Serial.printf("%d\n", val);
-  digitalWrite(LASER, HIGH);
   Val = String(val);
-  if (onAndOff.isPressed()){
+  if (onAndOff.isClicked()){
+  onAndOffV++;
+    if (onAndOffV >= 2){
+      onAndOffV = 0;
+    }
+  }
+  if (onAndOffV == 0){
+    display.clearDisplay();
+    display.drawBitmap(0, 1,  bitmap_SPLASH, 128, 64, WHITE);
+    display.display();
+    digitalWrite(LASER, LOW);
+  }
+
+  if (onAndOffV == 1){
     display.clearDisplay();
     display.drawBitmap(0, 1,  bitmap_START, 128, 64, WHITE);
     display.display();
+    digitalWrite(LASER, HIGH);
+  if (( currentTime - lastSecond ) >5000) {
+ display.clearDisplay();
+    display.drawBitmap(0, 1,  bitmap_ZERO, 128, 64, WHITE);
+    display.display();
+    lastSecond = millis();
   }
+}
+  
 }
