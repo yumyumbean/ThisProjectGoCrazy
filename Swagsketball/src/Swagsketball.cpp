@@ -8,8 +8,8 @@
 #include "Particle.h"
 #include "Adafruit_GFX.h"
 #include "Adafruit_SSD1306.h"
-#include "Button.h"
-#include "IoTTimer.h"
+#include "IoTClassroom_CNM.h"
+
 
 // Let Device OS manage the connection to the Particle Cloud
 SYSTEM_MODE(SEMI_AUTOMATIC);
@@ -1028,30 +1028,46 @@ const int rotdefault = 0;
 int score;
 IoTTimer timerOne;
 IoTTimer timerTwo;
+IoTTimer timerThree;
 int onAndOffV;
 int startGameV;
+const int MYWEMO=0;
+const int MYWEMO2=1;
+const int BULB=1;
+const int BULB2=2;
+const int BULB3=3; 
+int color;
+int hue;
+bool hueOff;
+int IMSICKOFTHIS;
 
 void setup() {
+    Serial.begin(9600);
+  waitFor(Serial.isConnected,15000);
+   setHue(BULB2,true,HueRainbow[color%7],random(32,255),255);
+  WiFi.on();
+  WiFi.clearCredentials();
+  WiFi.setCredentials("IoTNetwork");
+  WiFi.connect();
+  setHue(BULB,true,HueRainbow[color%7],random(32,255),255);
   pinMode(LASER, OUTPUT);
   digitalWrite(LASER, LOW);
   pinMode(dioPIN, OUTPUT); //SETS D2 TO OUTPUT
   pinMode(analogPin, INPUT); //SETS D12 to INPUT
-  Serial.begin(9600);
-  waitFor(Serial.isConnected,10000);
   display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
   display.display(); // show OLED splashscreen
   onAndOffV = 0;
   startGameV = 0;
   score = 0;
+  IMSICKOFTHIS = 0;
   delay(2000);
+   setHue(BULB3,true,HueRainbow[color%7],random(32,255),255);
+   timerThree.startTimer(oneSecTim);
 }
 
 
 void loop() {
   currentTime = millis();
-  val = analogRead(analogPin);
-  Serial.printf("%d\n", val);
-  Val = String(val);
   
   if (startGame.isClicked()){
     score = 0;
@@ -1060,9 +1076,16 @@ void loop() {
   if (onAndOff.isClicked()){
   lastSecond = millis();
     onAndOffV++;
+    IMSICKOFTHIS--;
   }
-  if (onAndOffV >= 3){
+  if (onAndOffV >= 4){
     onAndOffV = 0;
+  }
+  if (IMSICKOFTHIS >= 2){
+    IMSICKOFTHIS = 1;
+  }
+    if (IMSICKOFTHIS <= 0){
+    IMSICKOFTHIS = 0;
   }
   if (onAndOffV <= 0){
     display.clearDisplay();
@@ -1079,72 +1102,84 @@ void loop() {
 
     if (onAndOffV == 2){
     digitalWrite(LASER, HIGH);
+    if (timerThree.isTimerReady()){ 
+      val = analogRead(analogPin); 
+      Serial.printf("%d\n", val);
+      if (val < 4000){
+      score++;
+      timerThree.startTimer(oneSecTim);
+      }
+    }
       if(score == 0){
       display.clearDisplay();
-    display.drawBitmap(0, 1,  bitmap_ZERO, 128, 64, WHITE);
-    display.display();
-      if(score == 1){
-        display.clearDisplay();
-        display.drawBitmap(0, 1,  bitmap_ONE, 128, 64, WHITE);
-        display.display();
-          if(score == 2){
-            display.clearDisplay();
-            display.drawBitmap(0, 1,  bitmap_TWO, 128, 64, WHITE);
-            display.display();
-              if(score == 3){
-                display.clearDisplay();
-                display.drawBitmap(0, 1,  bitmap_THREE, 128, 64, WHITE);
-                display.display();
-                  if(score == 4){
-                    display.clearDisplay();
-                    display.drawBitmap(0, 1,  bitmap_FOUR, 128, 64, WHITE);
-                    display.display();
-                      if(score == 5){
-                        display.clearDisplay();
-                        display.drawBitmap(0, 1,  bitmap_ZERO, 128, 64, WHITE);
-                        display.display();
+      display.drawBitmap(0, 1,  bitmap_ZERO, 128, 64, WHITE);
+      display.display();
+      }
+        if(score == 1){
+          display.clearDisplay();
+          display.drawBitmap(0, 1,  bitmap_ONE, 128, 64, WHITE);
+          display.display();
+        }
+            if(score == 2){
+              display.clearDisplay();
+              display.drawBitmap(0, 1,  bitmap_TWO, 128, 64, WHITE);
+              display.display();
+            }
+                if(score == 3){
+                  display.clearDisplay();
+                  display.drawBitmap(0, 1,  bitmap_THREE, 128, 64, WHITE);
+                  display.display();
+                }
+                    if(score == 4){
+                      display.clearDisplay();
+                      display.drawBitmap(0, 1,  bitmap_FOUR, 128, 64, WHITE);
+                      display.display();
+                    }
+                        if(score == 5){
+                          display.clearDisplay();
+                          display.drawBitmap(0, 1,  bitmap_ZERO, 128, 64, WHITE);
+                          display.display();
+                        }
                               if(score == 6){
                                 display.clearDisplay();
                                 display.drawBitmap(0, 1,  bitmap_SIX, 128, 64, WHITE);
                                 display.display();
+                              }
                                 if(score == 7){
                                   display.clearDisplay();
                                   display.drawBitmap(0, 1,  bitmap_SEVEN, 128, 64, WHITE);
                                   display.display();
+                                }
                                   if(score == 8){
                                     display.clearDisplay();
                                     display.drawBitmap(0, 1,  bitmap_EIGHT, 128, 64, WHITE);
                                     display.display();
+                                    wemoWrite(MYWEMO, HIGH);
+                                  }
                                     if(score == 9){
                                       display.clearDisplay();
                                       display.drawBitmap(0, 1,  bitmap_NINE, 128, 64, WHITE);
                                       display.display();
-                                      if(score == 10){
+                                      wemoWrite(MYWEMO2, HIGH);
+                                    }
+                                      if(score >= 10){
+                                        score = 10;
+                                        color++;
+                                        if (color >= 7){
+                                      }
                                         display.clearDisplay();
                                         display.drawBitmap(0, 1,  bitmap_TEN, 128, 64, WHITE);
                                         display.display();
-                                        timerOne.startTimer(fiveSecTim);
-                                        if (timerOne.isTimerReady()) {
-                                          display.clearDisplay();
-                                          display.drawBitmap(0, 1,  bitmap_WIN, 128, 64, WHITE);
-                                          display.display();
-                                          timerTwo.startTimer(fiveSecTim);
-                                           if (timerTwo.isTimerReady()) {
-                                            score = 0;
-                                            onAndOffV = 0;
-                                            startGameV = 0;
+                                        wemoWrite(MYWEMO, LOW);
+                                        wemoWrite(MYWEMO2, LOW);
+                                            onAndOffV = 3;
+                                            IMSICKOFTHIS++;
+                                           }
+                                      if(IMSICKOFTHIS = 1){
+                                        display.clearDisplay();
+                                        display.drawBitmap(0, 1,  bitmap_WIN, 128, 64, WHITE);
+                                        display.display();
+                                      }
                           }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
     }
-  }
-}
-}
+
